@@ -80,6 +80,11 @@ const App: React.FC = () => {
   const removeItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setQueue(prev => {
+      const itemToRemove = prev.find(i => i.id === id);
+      if (itemToRemove) {
+        URL.revokeObjectURL(itemToRemove.previewUrl);
+      }
+
       const newQueue = prev.filter(i => i.id !== id);
       if (selectedId === id) {
         setSelectedId(newQueue.length > 0 ? newQueue[0].id : null);
@@ -89,9 +94,13 @@ const App: React.FC = () => {
   };
 
   const clearAll = () => {
-    if (window.confirm("确定要清空所有文件吗?")) {
-      setQueue([]);
-      setSelectedId(null);
+    // Removed window.confirm to fix potential blocking issues
+    // Cleanup memory
+    queue.forEach(item => URL.revokeObjectURL(item.previewUrl));
+    setQueue([]);
+    setSelectedId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -208,6 +217,7 @@ const App: React.FC = () => {
                     </button>
                   )}
                   <button 
+                    type="button"
                     onClick={clearAll}
                     className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
                   >
